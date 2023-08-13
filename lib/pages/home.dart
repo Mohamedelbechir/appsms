@@ -131,12 +131,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<XFile>> getXFiles() async {
-    final captureResults = await Future.wait(widgetKeys.map((currentKey) async {
+    final bytesImages = await Future.wait(widgetKeys.map((currentKey) async {
       return await convertToImageByteData(currentKey);
     }));
 
-    return captureResults
-        .where((item) => item?.buffer != null)
+    return bytesImages
+        .where((currentImageByte) => currentImageByte?.buffer != null)
         .map(mapBinaryToXFileImage)
         .toList();
   }
