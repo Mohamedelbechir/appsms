@@ -9,6 +9,19 @@ import '../../models/my_message.dart';
 
 part 'list_messages_state.dart';
 
+enum Expeditor { orangeMoney, all }
+
+extension ExpeditorExtension on Expeditor {
+  String display() {
+    switch (this) {
+      case Expeditor.orangeMoney:
+        return "OrangeMoney";
+      default:
+        return '';
+    }
+  }
+}
+
 class ListMessagesCubit extends Cubit<ListMessagesState> {
   final Telephony telephony = Telephony.instance;
 
@@ -37,10 +50,10 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
     emit(MessagesLoaded(list));
   }
 
-  MySmsMessage mapToMySmsMessage(item) => MySmsMessage(
-        expeditor: item.address,
-        body: item.body,
-        timestamp: item.date,
+  MySmsMessage mapToMySmsMessage(SmsMessage message) => MySmsMessage(
+        expeditor: message.address,
+        body: message.body,
+        timestamp: message.date,
       );
 
   Future<void> findWhereBodyContains(String phoneNumber) async {
