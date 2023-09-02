@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 class MySmsMessage extends Equatable {
   final String? expeditor;
   final String? body;
+  late final String? bodyWithNoSensitiveInfo;
   DateTime? date;
 
   MySmsMessage({
@@ -17,12 +18,34 @@ class MySmsMessage extends Equatable {
     } else {
       date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     }
+    bodyWithNoSensitiveInfo = "${body?.split('.').first}." ;
   }
 
+  String? getMessage({bool noSensitiveDetails = true}) {
+    return noSensitiveDetails ? bodyWithNoSensitiveInfo : body;
+  }
+
+  MySmsMessage.withDateTime({
+    required this.expeditor,
+    required this.body,
+    required this.date,
+  });
   @override
   List<Object?> get props => [
         expeditor,
         body,
         date,
       ];
+
+  MySmsMessage copyWith({
+    String? expeditor,
+    String? body,
+    DateTime? date,
+  }) {
+    return MySmsMessage.withDateTime(
+      expeditor: expeditor ?? this.expeditor,
+      body: body ?? this.body,
+      date: date ?? this.date,
+    );
+  }
 }

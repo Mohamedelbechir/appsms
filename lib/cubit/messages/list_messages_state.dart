@@ -10,6 +10,23 @@ class ListMessagesInitial extends ListMessagesState {}
 
 class MessagesLoaded extends ListMessagesState {
   final List<MySmsMessage> messages;
+  late final bool isSensitiveDetailDisplayed;
 
-  MessagesLoaded(this.messages);
+  MessagesLoaded(this.messages, {bool displaySensitiveDetail = false}) {
+    isSensitiveDetailDisplayed = displaySensitiveDetail;
+  }
+
+  MessagesLoaded copyWith({
+    List<MySmsMessage>? messages,
+    bool? isSensitiveDetailDisplayed,
+  }) {
+    return MessagesLoaded(
+      messages ?? this.messages,
+      displaySensitiveDetail:
+          isSensitiveDetailDisplayed ?? this.isSensitiveDetailDisplayed,
+    );
+  }
+
+  @override
+  List<Object?> get props => [messages, isSensitiveDetailDisplayed];
 }

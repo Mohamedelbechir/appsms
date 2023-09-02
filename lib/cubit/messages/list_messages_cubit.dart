@@ -30,24 +30,39 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
   void loadMessages({
     String expeditor = "Orange",
     required String pattern,
+    DateTime? date,
   }) async {
-    List<SmsMessage> messages = await telephony.getInboxSms(
-        filter: SmsFilter.where(SmsColumn.ADDRESS)
-            .equals(expeditor)
-            .and(SmsColumn.BODY)
-            .like('%$pattern%'),
-        columns: [
-          SmsColumn.ADDRESS,
-          SmsColumn.BODY,
-          SmsColumn.DATE,
-        ],
-        sortOrder: [
-          OrderBy(SmsColumn.DATE, sort: Sort.ASC),
-          OrderBy(SmsColumn.BODY)
-        ]);
+    final messages = await telephony
+        .getInboxSms(filter: _getFilter(expeditor, pattern, date), columns: [
+      SmsColumn.ADDRESS,
+      SmsColumn.BODY,
+      SmsColumn.DATE,
+    ], sortOrder: [
+      OrderBy(SmsColumn.DATE, sort: Sort.ASC),
+      OrderBy(SmsColumn.BODY)
+    ]);
 
     var list = messages.map(mapToMySmsMessage).toList();
     emit(MessagesLoaded(list));
+  }
+
+  SmsFilter _getFilter(String expeditor, String pattern, DateTime? date) {
+    var filter = SmsFilter.where(SmsColumn.ADDRESS)
+        .equals(expeditor)
+        .and(SmsColumn.BODY)
+        .like('%$pattern%');
+
+    if (date != null) {
+      filter = filter
+          .and(SmsColumn.DATE)
+          .greaterThanOrEqualTo(date.millisecondsSinceEpoch.toString())
+          .and(SmsColumn.DATE)
+          .lessThan(date
+              .add(const Duration(days: 1))
+              .millisecondsSinceEpoch
+              .toString());
+    }
+    return filter;
   }
 
   MySmsMessage mapToMySmsMessage(SmsMessage message) => MySmsMessage(
@@ -70,5 +85,14 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
         ]);
     var list = messages.map(mapToMySmsMessage).toList();
     print(list);
+  }
+
+  void toggleSensitiveDetails() {
+    if (state is MessagesLoaded) {
+      final currentState = (state as MessagesLoaded);
+      emit(currentState.copyWith(
+        isSensitiveDetailDisplayed: !currentState.isSensitiveDetailDisplayed,
+      ));
+    }
   }
 }

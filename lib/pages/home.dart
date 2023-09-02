@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 
 class SaveImageResult {
   final String path;
@@ -28,11 +29,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final widgetKeys = <GlobalKey>[];
+  bool isSensitiveDetailDisplayed = true;
+  List<DateTime?> _singleDatePickerValueWithDefaultValue = [
+    DateUtils.dateOnly(DateTime.now()),
+  ];
+  final _expeditorNumberController = TextEditingController(text: '');
 
   @override
   void initState() {
     super.initState();
-    context.read<ListMessagesCubit>().loadMessages(pattern: 'Mabrouk');
+    context.read<ListMessagesCubit>().loadMessages(pattern: '');
+
+    context.read<ListMessagesCubit>().stream.listen((event) {
+      if (event is MessagesLoaded) {
+        setState(() {
+          isSensitiveDetailDisplayed = event.isSensitiveDetailDisplayed;
+        });
+      }
+    });
   }
 
   Future<SaveImageResult> takeWidgetCapture(GlobalKey widgetKey) async {
@@ -63,6 +77,52 @@ class _HomePageState extends State<HomePage> {
     return SaveImageResult(result['filePath'], result['isSuccess']);
   }
 
+  Widget _buildDefaultSingleDatePickerWithValue() {
+    final config = getCalendarPickerConfig();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CalendarDatePicker2(
+          config: config,
+          value: _singleDatePickerValueWithDefaultValue,
+          onValueChanged: (dates) => setState(() {
+            _singleDatePickerValueWithDefaultValue = dates;
+          }),
+        ),
+      ],
+    );
+  }
+
+  CalendarDatePicker2Config getCalendarPickerConfig() {
+    return CalendarDatePicker2Config(
+      selectedDayHighlightColor: Colors.amber[900],
+      weekdayLabels: [
+        'Dimanche',
+        'Lundi',
+        'Mardi',
+        'Mercredi',
+        'Jeudi',
+        'Vendredi',
+        'Samedi'
+      ],
+      weekdayLabelTextStyle: const TextStyle(
+        color: Colors.black87,
+        fontWeight: FontWeight.bold,
+      ),
+      firstDayOfWeek: 1,
+      controlsHeight: 50,
+      controlsTextStyle: const TextStyle(
+        color: Colors.black,
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+      ),
+      dayTextStyle: const TextStyle(
+        color: Colors.amber,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,51 +130,156 @@ class _HomePageState extends State<HomePage> {
         title: Text(widget.title),
       ),
       backgroundColor: Colors.white,
-      body: Center(child: BlocBuilder<ListMessagesCubit, ListMessagesState>(
-        builder: (context, state) {
-          if (state is MessagesLoaded) {
-            return ListView.builder(
-              itemCount: state.messages.length,
-              itemBuilder: (context, index) {
-                final currentMessage = state.messages.elementAt(index);
-                final currentKey = GlobalKey();
-                widgetKeys.add(currentKey);
-                return InkWell(
-                  onTap: () => takeWidgetCapture(currentKey),
-                  child: RepaintBoundary(
-                    key: currentKey,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: BlocBuilder<ListMessagesCubit, ListMessagesState>(
+                builder: (_, state) => _renderListMessages(state),
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+              color: const Color.fromARGB(255, 248, 241, 229).withOpacity(.2),
+            ),
+            child: Column(
+              children: [
+                _buildDefaultSingleDatePickerWithValue(),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: _renderExpeditorPhoneNumberTextField(),
                       ),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        currentMessage.body ?? '',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(width: 10),
+                      InkWell(
+                        onTap: () {
+                          context.read<ListMessagesCubit>().loadMessages(
+                                pattern: _expeditorNumberController.text,
+                                date: _singleDatePickerValueWithDefaultValue
+                                    .first,
+                              );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(15.0),
+                          child: Icon(Icons.send, color: Colors.orange),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+                InkWell(
+                  onTap: () {
+                    context.read<ListMessagesCubit>().toggleSensitiveDetails();
+                  },
+                  child: Row(
+                    children: [
+                      IgnorePointer(
+                        child: Switch(
+                          value: !isSensitiveDetailDisplayed,
+                          onChanged: (_) {},
                         ),
                       ),
-                    ),
+                      const Text(
+                          "Supprimer les details de mon solde Orange Money"),
+                    ],
                   ),
-                );
-              },
-            );
-          }
-          return Container();
-        },
-      )),
+                ),
+              ],
+            ),
+          ) /*   Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              
+              ElevatedButton(
+                onPressed: () async {
+                  await shareMessages();
+                },
+                child: Column(
+                  children: const [
+                    Icon(Icons.share),
+                    Text("Partager"),
+                  ],
+                ),
+              )
+            ],
+          ) */
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await shareMessages();
         },
         child: const Icon(Icons.share),
       ),
+    );
+  }
+
+  TextField _renderExpeditorPhoneNumberTextField() {
+    return TextField(
+        keyboardType: TextInputType.phone,
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.all(10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+          ),
+          hintText: "Saisir le numéro de téléphone du bénéficiaire",
+          prefixIcon: Icon(Icons.numbers),
+        ),
+        controller: _expeditorNumberController);
+  }
+
+  StatelessWidget _renderListMessages(ListMessagesState state) {
+    if (state is MessagesLoaded) {
+      return _listMessages(state);
+    }
+    return Container();
+  }
+
+  ListView _listMessages(MessagesLoaded state) {
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      children: List.generate(state.messages.length, (index) {
+        final currentMessage = state.messages.elementAt(index);
+        final currentKey = GlobalKey();
+        widgetKeys.add(currentKey);
+        var messageContent = currentMessage.getMessage(
+                noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
+            '';
+        return InkWell(
+          onTap: () => takeWidgetCapture(currentKey),
+          child: RepaintBoundary(
+            key: currentKey,
+            child: Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 5,
+              ),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                messageContent,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 
@@ -132,6 +297,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<List<XFile>> getXFiles() async {
     final bytesImages = await Future.wait(widgetKeys.map((currentKey) async {
+      //assert(!currentKey.currentContext!.findRenderObject()!.debugNeedsPaint);
       return await convertToImageByteData(currentKey);
     }));
 
