@@ -1,3 +1,4 @@
+import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
 import 'package:appsms/pages/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,11 +35,10 @@ class MyApp extends StatelessWidget {
       }), */
       home: MultiBlocProvider(
         providers: [
-          BlocProvider(
-            create: (context) => ListMessagesCubit(),
-          ),
+          BlocProvider(create: (context) => ReceiversPhoneNumbersCubit()),
+          BlocProvider(create: (context) => ListMessagesCubit()),
         ],
-        child: const HomePage(title: 'SMS APP'),
+        child: const SafeArea(child: HomePage(title: 'SMS APP')),
       ),
     );
   }

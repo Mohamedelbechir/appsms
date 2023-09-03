@@ -1,15 +1,17 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:appsms/cubit/messages/list_messages_cubit.dart';
+import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
+import 'package:appsms/widgets/receiver_phone_number_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import '../widgets/receiver_phone_numbers_widget.dart';
 
 class SaveImageResult {
   final String path;
@@ -30,10 +32,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final widgetKeys = <GlobalKey>[];
   bool isSensitiveDetailDisplayed = true;
+  final _receiverPhoneNumberController = TextEditingController(text: '');
+
   List<DateTime?> _singleDatePickerValueWithDefaultValue = [
     DateUtils.dateOnly(DateTime.now()),
   ];
-  final _expeditorNumberController = TextEditingController(text: '');
 
   @override
   void initState() {
@@ -150,6 +153,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 _buildDefaultSingleDatePickerWithValue(),
+                const ReceiverPhoneNumbersWidget(),
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
@@ -157,20 +161,23 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: _renderExpeditorPhoneNumberTextField(),
+                        child: ReceiverPhoneNumberTextField(
+                          receiverPhoneNumberController:
+                              _receiverPhoneNumberController,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       InkWell(
                         onTap: () {
                           context.read<ListMessagesCubit>().loadMessages(
-                                pattern: _expeditorNumberController.text,
+                                pattern: _receiverPhoneNumberController.text,
                                 date: _singleDatePickerValueWithDefaultValue
                                     .first,
                               );
                         },
                         child: const Padding(
                           padding: EdgeInsets.all(15.0),
-                          child: Icon(Icons.send, color: Colors.orange),
+                          child: Icon(Icons.search, color: Colors.orange),
                         ),
                       )
                     ],
@@ -185,7 +192,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       IgnorePointer(
                         child: Switch(
-                          value: !isSensitiveDetailDisplayed,
+                          value: isSensitiveDetailDisplayed,
                           onChanged: (_) {},
                         ),
                       ),
@@ -224,62 +231,53 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  TextField _renderExpeditorPhoneNumberTextField() {
-    return TextField(
-        keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          contentPadding: EdgeInsets.all(10),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          hintText: "Saisir le numéro de téléphone du bénéficiaire",
-          prefixIcon: Icon(Icons.numbers),
-        ),
-        controller: _expeditorNumberController);
-  }
-
-  StatelessWidget _renderListMessages(ListMessagesState state) {
+  Widget _renderListMessages(ListMessagesState state) {
     if (state is MessagesLoaded) {
       return _listMessages(state);
     }
     return Container();
   }
 
-  ListView _listMessages(MessagesLoaded state) {
-    return ListView(
+  Widget _listMessages(MessagesLoaded state) {
+    return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      children: List.generate(state.messages.length, (index) {
-        final currentMessage = state.messages.elementAt(index);
-        final currentKey = GlobalKey();
-        widgetKeys.add(currentKey);
-        var messageContent = currentMessage.getMessage(
-                noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
-            '';
-        return InkWell(
-          onTap: () => takeWidgetCapture(currentKey),
-          child: RepaintBoundary(
-            key: currentKey,
-            child: Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 5,
-              ),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                messageContent,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: List.generate(state.messages.length, (index) {
+          final currentMessage = state.messages.elementAt(index);
+          final currentKey = GlobalKey();
+          widgetKeys.add(currentKey);
+          var messageContent = currentMessage.getMessage(
+                  noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
+              '';
+          return InkWell(
+            onTap: () => takeWidgetCapture(currentKey),
+            child: RepaintBoundary(
+              key: currentKey,
+              child: Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  messageContent,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
@@ -297,7 +295,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<List<XFile>> getXFiles() async {
     final bytesImages = await Future.wait(widgetKeys.map((currentKey) async {
-      //assert(!currentKey.currentContext!.findRenderObject()!.debugNeedsPaint);
       return await convertToImageByteData(currentKey);
     }));
 
