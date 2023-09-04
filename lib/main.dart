@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => ReceiversPhoneNumbersCubit()),
           BlocProvider(create: (context) => ListMessagesCubit()),
         ],
-        child: const SafeArea(child: HomePage(title: 'SMS APP')),
+        child: const SafeArea(child: HomePage(title: 'ETS  SABIL :: SMS APP')),
       ),
     );
   }

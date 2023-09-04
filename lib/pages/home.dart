@@ -10,14 +10,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
+import '../models/save_image_result.dart';
+import '../widgets/app_title.dart';
+import '../widgets/empty_list_of_message.dart';
+import '../widgets/message_item.dart';
 import '../widgets/receiver_phone_numbers_widget.dart';
-
-class SaveImageResult {
-  final String path;
-  final bool isSuccess;
-
-  SaveImageResult(this.path, this.isSuccess);
-}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -30,7 +27,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final widgetKeys = <GlobalKey>[];
-  bool isSensitiveDetailDisplayed = true;
+  bool isSensitiveDetailDisplayed = false;
   final _receiverPhoneNumberController = TextEditingController(text: '');
   var selectedDate = DateUtils.dateOnly(DateTime.now());
 
@@ -78,7 +75,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        //centerTitle: true,
+        title: const AppTitle(),
       ),
       backgroundColor: Colors.white,
       body: Column(
@@ -138,8 +138,7 @@ class _HomePageState extends State<HomePage> {
                           onChanged: (_) {},
                         ),
                       ),
-                      const Text(
-                          "Supprimer les details de mon solde Orange Money"),
+                      const Text("Supprimer les details de mon solde"),
                     ],
                   ),
                 ),
@@ -187,28 +186,7 @@ class _HomePageState extends State<HomePage> {
       return _listMessages(state);
     }
     if (state is ListMessagesInitial) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "✉",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 50,
-              ),
-            ),
-            Text(
-              "Aucun message à afficher",
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-      );
+      return const EmptyListOfMessage();
     }
     return Container();
   }
@@ -228,27 +206,7 @@ class _HomePageState extends State<HomePage> {
           var messageContent = currentMessage.getMessage(
                   noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
               '';
-          return RepaintBoundary(
-            key: currentKey,
-            child: Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 5,
-              ),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                messageContent,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          );
+          return MessageItem(currentKey: currentKey, messageContent: messageContent);
         }),
       ),
     );
