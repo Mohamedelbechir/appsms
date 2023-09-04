@@ -17,9 +17,7 @@ import '../widgets/message_item.dart';
 import '../widgets/receiver_phone_numbers_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title});
-
-  final String title;
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -206,7 +204,8 @@ class _HomePageState extends State<HomePage> {
           var messageContent = currentMessage.getMessage(
                   noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
               '';
-          return MessageItem(currentKey: currentKey, messageContent: messageContent);
+          return MessageItem(
+              currentKey: currentKey, messageContent: messageContent);
         }),
       ),
     );
