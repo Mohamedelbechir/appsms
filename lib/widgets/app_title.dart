@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AppTitle extends StatelessWidget {
@@ -12,7 +11,7 @@ class AppTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
-          "EST",
+          "ETS",
           style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,
