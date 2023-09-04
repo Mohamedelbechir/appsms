@@ -9,6 +9,7 @@ final phoneNumberMaskFormatter = MaskTextInputFormatter(
   type: MaskAutoCompletionType.lazy,
 );
 
+// ignore: must_be_immutable
 class ReceiverPhoneNumberTextField extends StatefulWidget {
   TextEditingController receiverPhoneNumberController;
 

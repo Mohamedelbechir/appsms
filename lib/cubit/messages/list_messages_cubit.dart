@@ -29,11 +29,11 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
 
   void loadMessages({
     String expeditor = "Orange",
-    required String pattern,
+    List<String> bodyPatterns = const [],
     DateTime? date,
   }) async {
     final messages = await telephony
-        .getInboxSms(filter: _getFilter(expeditor, pattern, date), columns: [
+        .getInboxSms(filter: _getFilter(expeditor, date), columns: [
       SmsColumn.ADDRESS,
       SmsColumn.BODY,
       SmsColumn.DATE,
@@ -42,15 +42,27 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
       OrderBy(SmsColumn.BODY)
     ]);
 
-    var list = messages.map(mapToMySmsMessage).toList();
+    var list = _applyPatternFilter(messages, bodyPatterns)
+        .map(mapToMySmsMessage)
+        .toList();
     emit(MessagesLoaded(list));
   }
 
-  SmsFilter _getFilter(String expeditor, String pattern, DateTime? date) {
-    var filter = SmsFilter.where(SmsColumn.ADDRESS)
-        .equals(expeditor)
-        .and(SmsColumn.BODY)
-        .like('%$pattern%');
+  Iterable<SmsMessage> _applyPatternFilter(
+    List<SmsMessage> messages,
+    List<String> patterns,
+  ) {
+    if (patterns.isEmpty) return messages;
+    return messages.where((currentMessage) {
+      return patterns.any((pattern) => currentMessage.body!.contains(pattern));
+    });
+  }
+
+  SmsFilter _getFilter(
+    String expeditor,
+    DateTime? date,
+  ) {
+    var filter = SmsFilter.where(SmsColumn.ADDRESS).equals(expeditor);
 
     if (date != null) {
       filter = filter

@@ -44,6 +44,8 @@ dependencies:
   calendar_date_picker2: ^0.5.3
   screenshot: ^2.1.0
   mask_text_input_formatter: ^2.5.0
+  flutter_rounded_date_picker: ^3.0.4
+
 
 
 

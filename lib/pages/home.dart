@@ -3,14 +3,13 @@ import 'dart:ui';
 
 import 'package:appsms/cubit/messages/list_messages_cubit.dart';
 import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
+import 'package:appsms/widgets/data_selector.dart';
 import 'package:appsms/widgets/receiver_phone_number_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../widgets/receiver_phone_numbers_widget.dart';
 
 class SaveImageResult {
@@ -33,16 +32,11 @@ class _HomePageState extends State<HomePage> {
   final widgetKeys = <GlobalKey>[];
   bool isSensitiveDetailDisplayed = true;
   final _receiverPhoneNumberController = TextEditingController(text: '');
-
-  List<DateTime?> _singleDatePickerValueWithDefaultValue = [
-    DateUtils.dateOnly(DateTime.now()),
-  ];
+  var selectedDate = DateUtils.dateOnly(DateTime.now());
 
   @override
   void initState() {
     super.initState();
-    context.read<ListMessagesCubit>().loadMessages(pattern: '');
-
     context.read<ListMessagesCubit>().stream.listen((event) {
       if (event is MessagesLoaded) {
         setState(() {
@@ -80,52 +74,6 @@ class _HomePageState extends State<HomePage> {
     return SaveImageResult(result['filePath'], result['isSuccess']);
   }
 
-  Widget _buildDefaultSingleDatePickerWithValue() {
-    final config = getCalendarPickerConfig();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CalendarDatePicker2(
-          config: config,
-          value: _singleDatePickerValueWithDefaultValue,
-          onValueChanged: (dates) => setState(() {
-            _singleDatePickerValueWithDefaultValue = dates;
-          }),
-        ),
-      ],
-    );
-  }
-
-  CalendarDatePicker2Config getCalendarPickerConfig() {
-    return CalendarDatePicker2Config(
-      selectedDayHighlightColor: Colors.amber[900],
-      weekdayLabels: [
-        'Dimanche',
-        'Lundi',
-        'Mardi',
-        'Mercredi',
-        'Jeudi',
-        'Vendredi',
-        'Samedi'
-      ],
-      weekdayLabelTextStyle: const TextStyle(
-        color: Colors.black87,
-        fontWeight: FontWeight.bold,
-      ),
-      firstDayOfWeek: 1,
-      controlsHeight: 50,
-      controlsTextStyle: const TextStyle(
-        color: Colors.black,
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
-      ),
-      dayTextStyle: const TextStyle(
-        color: Colors.amber,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,7 +100,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Column(
               children: [
-                _buildDefaultSingleDatePickerWithValue(),
+                DateSelector(onSelect: (value) => selectedDate = value),
                 const ReceiverPhoneNumbersWidget(),
                 Padding(
                   padding:
@@ -168,13 +116,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(width: 10),
                       InkWell(
-                        onTap: () {
-                          context.read<ListMessagesCubit>().loadMessages(
-                                pattern: _receiverPhoneNumberController.text,
-                                date: _singleDatePickerValueWithDefaultValue
-                                    .first,
-                              );
-                        },
+                        onTap: _searchMessages,
                         child: const Padding(
                           padding: EdgeInsets.all(15.0),
                           child: Icon(Icons.search, color: Colors.orange),
@@ -203,23 +145,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-          ) /*   Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              
-              ElevatedButton(
-                onPressed: () async {
-                  await shareMessages();
-                },
-                child: Column(
-                  children: const [
-                    Icon(Icons.share),
-                    Text("Partager"),
-                  ],
-                ),
-              )
-            ],
-          ) */
+          )
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -231,9 +157,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _searchMessages() {
+    final phoneNumbers = _getPhoneNumbers();
+    context.read<ListMessagesCubit>().loadMessages(
+          bodyPatterns: phoneNumbers,
+          date: selectedDate,
+        );
+  }
+
+  List<String> _getPhoneNumbers() {
+    final currentState = context.read<ReceiversPhoneNumbersCubit>().state;
+
+    final phoneNumbers = <String>[];
+
+    final currentPhoneInTextField = phoneNumberMaskFormatter
+        .unmaskText(_receiverPhoneNumberController.text);
+
+    if (currentPhoneInTextField.trim().isNotEmpty) {
+      phoneNumbers.add(currentPhoneInTextField);
+    }
+    if (currentState is ReceiversPhoneNumbersLoaded) {
+      phoneNumbers.addAll(currentState.numbers);
+    }
+    return phoneNumbers;
+  }
+
   Widget _renderListMessages(ListMessagesState state) {
     if (state is MessagesLoaded) {
       return _listMessages(state);
+    }
+    if (state is ListMessagesInitial) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "✉",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 50,
+              ),
+            ),
+            Text(
+              "Aucun message à afficher",
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+      );
     }
     return Container();
   }
@@ -242,6 +217,7 @@ class _HomePageState extends State<HomePage> {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
+        key: const Key("list_messages"),
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -252,26 +228,23 @@ class _HomePageState extends State<HomePage> {
           var messageContent = currentMessage.getMessage(
                   noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
               '';
-          return InkWell(
-            onTap: () => takeWidgetCapture(currentKey),
-            child: RepaintBoundary(
-              key: currentKey,
-              child: Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  messageContent,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
+          return RepaintBoundary(
+            key: currentKey,
+            child: Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 5,
+              ),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                messageContent,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
