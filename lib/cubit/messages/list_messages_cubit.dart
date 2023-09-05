@@ -49,7 +49,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
     String expeditor,
     DateTime? date,
   ) {
-    var filter = SmsFilter.where(SmsColumn.ADDRESS).equals(expeditor);
+    var filter = SmsFilter.where(SmsColumn.BODY).equals("");
 
     if (date != null) {
       filter = filter
