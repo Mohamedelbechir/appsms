@@ -19,11 +19,20 @@ class _SensitiveDetailConfigState extends State<SensitiveDetailConfig> {
   @override
   void initState() {
     super.initState();
+    final currentState = context.read<ListMessagesCubit>().state;
+
+    if (currentState is MessagesLoaded) {
+      isSensitiveDetailDisplayed = currentState.isSensitiveDetailDisplayed;
+    }
+    _subscribeToMessageChanges();
+  }
+
+  void _subscribeToMessageChanges() {
     streamSubscription =
-        context.read<ListMessagesCubit>().stream.listen((event) {
-      if (event is MessagesLoaded) {
+        context.read<ListMessagesCubit>().stream.listen((state) {
+      if (state is MessagesLoaded) {
         setState(() {
-          isSensitiveDetailDisplayed = event.isSensitiveDetailDisplayed;
+          isSensitiveDetailDisplayed = state.isSensitiveDetailDisplayed;
         });
       }
     });

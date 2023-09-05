@@ -4,14 +4,16 @@ import 'package:appsms/pages/parameter/widgets/sensitive_detail_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+
+const modalTopBorderRadius = BorderRadius.only(
+  topLeft: Radius.circular(10),
+  topRight: Radius.circular(10),
+);
+
+
 void parameterModal(BuildContext parentContext) {
   Widget? modal;
   final size = MediaQuery.of(parentContext).size;
-
-  const modalTopBorderRadius = BorderRadius.only(
-    topLeft: Radius.circular(10),
-    topRight: Radius.circular(10),
-  );
 
   showModalBottomSheet(
     context: parentContext,
