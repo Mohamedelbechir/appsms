@@ -9,19 +9,6 @@ import '../../models/my_message.dart';
 
 part 'list_messages_state.dart';
 
-enum Expeditor { orangeMoney, all }
-
-extension ExpeditorExtension on Expeditor {
-  String display() {
-    switch (this) {
-      case Expeditor.orangeMoney:
-        return "OrangeMoney";
-      default:
-        return '';
-    }
-  }
-}
-
 class ListMessagesCubit extends Cubit<ListMessagesState> {
   final Telephony telephony = Telephony.instance;
 
@@ -62,7 +49,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
     String expeditor,
     DateTime? date,
   ) {
-    var filter = SmsFilter.where(SmsColumn.ADDRESS).equals(expeditor);
+    var filter = SmsFilter.where(SmsColumn.BODY).equals(expeditor);
 
     if (date != null) {
       filter = filter
@@ -105,6 +92,8 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
       emit(currentState.copyWith(
         isSensitiveDetailDisplayed: !currentState.isSensitiveDetailDisplayed,
       ));
+    } else {
+      emit(MessagesLoaded(const [], displaySensitiveDetail: true));
     }
   }
 }

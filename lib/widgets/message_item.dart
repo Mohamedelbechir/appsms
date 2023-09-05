@@ -24,12 +24,16 @@ class MessageItem extends StatelessWidget {
           color: Colors.grey[50],
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          messageContent,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Column(
+          children: [
+            Text(
+              messageContent,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

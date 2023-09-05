@@ -157,6 +157,7 @@ class _HomePageState extends State<HomePage> {
   void _searchMessages() {
     final phoneNumbers = _getPhoneNumbers();
     context.read<ListMessagesCubit>().loadMessages(
+          expeditor: "OrangeMoney",
           bodyPatterns: phoneNumbers,
           date: selectedDate,
         );
@@ -205,7 +206,9 @@ class _HomePageState extends State<HomePage> {
                   noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
               '';
           return MessageItem(
-              currentKey: currentKey, messageContent: messageContent);
+            currentKey: currentKey,
+            messageContent: messageContent,
+          );
         }),
       ),
     );
