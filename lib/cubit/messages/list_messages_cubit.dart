@@ -1,5 +1,9 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
+
+import 'package:appsms/cubit/parameter/parameter_cubit.dart';
+import 'package:appsms/models/app_parameter.dart';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:telephony/telephony.dart';
@@ -11,28 +15,51 @@ part 'list_messages_state.dart';
 
 class ListMessagesCubit extends Cubit<ListMessagesState> {
   final Telephony telephony = Telephony.instance;
+  final ParameterCubit _parameterCubit;
+  AppParameter? _parameter;
 
-  ListMessagesCubit() : super(ListMessagesInitial());
+  StreamSubscription<ParameterState>? appParameterSubscription;
+
+  ListMessagesCubit(this._parameterCubit) : super(ListMessagesInitial()) {
+    appParameterSubscription =
+        _parameterCubit.stream.listen(_subscribeToAppParameter);
+    if (_parameterCubit.state is ParameterInitial) {
+      _parameterCubit.loadAppParameter();
+    }
+  }
 
   void loadMessages({
     String expeditor = "Orange",
     List<String> bodyPatterns = const [],
     DateTime? date,
   }) async {
-    final messages = await telephony
-        .getInboxSms(filter: _getFilter(expeditor, date), columns: [
-      SmsColumn.ADDRESS,
-      SmsColumn.BODY,
-      SmsColumn.DATE,
-    ], sortOrder: [
-      OrderBy(SmsColumn.DATE, sort: Sort.ASC),
-      OrderBy(SmsColumn.BODY)
-    ]);
+    final messages = await telephony.getInboxSms(
+      filter: _getFilter(expeditor, date),
+      columns: _getColumns,
+      sortOrder: _getSortOrder,
+    );
 
     var list = _applyPatternFilter(messages, bodyPatterns)
         .map(mapToMySmsMessage)
         .toList();
-    emit(MessagesLoaded(list));
+        
+    emit(MessagesLoaded(
+      list,
+      appreciation: _parameter?.displayAppreciation() ?? "",
+      displaySensitiveDetail: _parameter?.isSensitiveInfoDisplayed ?? false,
+    ));
+  }
+
+  List<OrderBy> get _getSortOrder {
+    return [OrderBy(SmsColumn.DATE, sort: Sort.ASC), OrderBy(SmsColumn.BODY)];
+  }
+
+  List<SmsColumn> get _getColumns {
+    return [
+      SmsColumn.ADDRESS,
+      SmsColumn.BODY,
+      SmsColumn.DATE,
+    ];
   }
 
   Iterable<SmsMessage> _applyPatternFilter(
@@ -47,53 +74,58 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
 
   SmsFilter _getFilter(
     String expeditor,
-    DateTime? date,
+    DateTime? dateFrom,
   ) {
-    var filter = SmsFilter.where(SmsColumn.BODY).equals("");
+    var filter = SmsFilter.where(SmsColumn.BODY).like("%%");
 
-    if (date != null) {
+    if (dateFrom != null) {
+      var dateTo = dateFrom.add(const Duration(days: 1));
+
       filter = filter
           .and(SmsColumn.DATE)
-          .greaterThanOrEqualTo(date.millisecondsSinceEpoch.toString())
+          .greaterThanOrEqualTo(dateFrom.millisecondsSinceEpoch.toString())
           .and(SmsColumn.DATE)
-          .lessThan(date
-              .add(const Duration(days: 1))
-              .millisecondsSinceEpoch
-              .toString());
+          .lessThan(dateTo.millisecondsSinceEpoch.toString());
     }
     return filter;
   }
 
-  MySmsMessage mapToMySmsMessage(SmsMessage message) => MySmsMessage(
-        expeditor: message.address,
-        body: message.body,
-        timestamp: message.date,
-      );
-
-  Future<void> findWhereBodyContains(String phoneNumber) async {
-    final messages = await telephony.getInboxSms(
-        columns: [
-          SmsColumn.ADDRESS,
-          SmsColumn.BODY,
-          SmsColumn.DATE,
-        ],
-        filter: SmsFilter.where(SmsColumn.BODY).like(phoneNumber),
-        sortOrder: [
-          OrderBy(SmsColumn.DATE, sort: Sort.ASC),
-          OrderBy(SmsColumn.BODY)
-        ]);
-    var list = messages.map(mapToMySmsMessage).toList();
-    print(list);
+  MySmsMessage mapToMySmsMessage(SmsMessage message) {
+    return MySmsMessage(
+      expeditor: message.address,
+      body: message.body,
+      timestamp: message.date,
+    );
   }
 
-  void toggleSensitiveDetails() {
+  void _onAppParameterChanged(AppParameter parameter) {
+    _parameter = parameter;
     if (state is MessagesLoaded) {
-      final currentState = (state as MessagesLoaded);
-      emit(currentState.copyWith(
-        isSensitiveDetailDisplayed: !currentState.isSensitiveDetailDisplayed,
-      ));
+      final currentState = state as MessagesLoaded;
+      emit(
+        currentState.copyWith(
+          displaySensitiveDetail: parameter.isSensitiveInfoDisplayed,
+          appreciation: parameter.displayAppreciation(),
+        ),
+      );
     } else {
-      emit(MessagesLoaded(const [], displaySensitiveDetail: true));
+      emit(MessagesLoaded(
+        const [],
+        displaySensitiveDetail: parameter.isSensitiveInfoDisplayed,
+        appreciation: parameter.displayAppreciation(),
+      ));
     }
+  }
+
+  void _subscribeToAppParameter(parameterState) {
+    if (parameterState is ParameterLoaded) {
+      _onAppParameterChanged(parameterState.parameter);
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    appParameterSubscription?.cancel();
+    await super.close();
   }
 }

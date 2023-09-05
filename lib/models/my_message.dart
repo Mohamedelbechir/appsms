@@ -18,11 +18,11 @@ class MySmsMessage extends Equatable {
     } else {
       date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     }
-    bodyWithNoSensitiveInfo = "${body?.split('.').first}." ;
+    bodyWithNoSensitiveInfo = "${body?.split('.').first}.";
   }
 
-  String? getMessage({bool noSensitiveDetails = true}) {
-    return noSensitiveDetails ? bodyWithNoSensitiveInfo : body;
+  String? getMessage({bool displaySensitiveDetails = true}) {
+    return displaySensitiveDetails ? body : bodyWithNoSensitiveInfo;
   }
 
   MySmsMessage.withDateTime({

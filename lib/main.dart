@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => ParameterCubit()..loadAppParameter()),
           BlocProvider(create: (context) => ReceiversPhoneNumbersCubit()),
-          BlocProvider(create: (context) => ListMessagesCubit()),
+          BlocProvider(create: (context) => ListMessagesCubit(context.read())),
         ],
         child: const SafeArea(child: HomePage()),
       ),

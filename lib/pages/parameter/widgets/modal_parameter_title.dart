@@ -7,12 +7,15 @@ class ModalParameterTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      "Paramétrage",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-        color: Colors.orange,
+    return const Padding(
+      padding: EdgeInsets.only(left: 15),
+      child: Text(
+        "Paramétrage",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 25,
+          color: Colors.orange,
+        ),
       ),
     );
   }

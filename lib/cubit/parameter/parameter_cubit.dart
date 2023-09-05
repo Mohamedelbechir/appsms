@@ -1,19 +1,19 @@
 import 'package:appsms/models/app_parameter.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'parameter_state.dart';
 
 class ParameterCubit extends Cubit<ParameterState> {
-  final sensitiveInfoKey = "SENSITIVE_INFO_KEY";
-  final appreciationKey = "APPRECIATION_KEY";
-  final appreciationDefaultValue =
+  final _sensitiveInfoKey = "SENSITIVE_INFO_KEY";
+  final _appreciationDisplayKey = "APPRECIATION_DISPLAY_KEY";
+  final _appreciationKey = "APPRECIATION_KEY";
+  final _appreciationDefaultValue =
       "ETS SABIL vous remercie pour votre confiance";
-  final sensitiveDisplayDefaultValue = false;
 
-  final _parameterBehaviorSubject = BehaviorSubject<AppParameter>();
+  final _sensitiveDisplayDefaultValue = false;
+  final _appreciationDisplayDefaultValue = true;
 
   ParameterCubit() : super(ParameterInitial());
 
@@ -21,52 +21,50 @@ class ParameterCubit extends Cubit<ParameterState> {
     final pref = await SharedPreferences.getInstance();
 
     final sensitiveDisplay =
-        pref.getBool(sensitiveInfoKey) ?? sensitiveDisplayDefaultValue;
+        pref.getBool(_sensitiveInfoKey) ?? _sensitiveDisplayDefaultValue;
+    final appreciationDisplay = pref.getBool(_appreciationDisplayKey) ??
+        _appreciationDisplayDefaultValue;
     final appreciation =
-        pref.getString(sensitiveInfoKey) ?? appreciationDefaultValue;
+        pref.getString(_appreciationKey) ?? _appreciationDefaultValue;
 
-    _notifyStateChange(AppParameter(
+    emit(ParameterLoaded(AppParameter(
       appreciation: appreciation,
       isSensitiveInfoDisplayed: sensitiveDisplay,
-    ));
+      isAppreciationDisplayed: appreciationDisplay,
+    )));
   }
 
   void setSensitiveInfoVisibility(bool displaySensitiveInfo) async {
     final pref = await SharedPreferences.getInstance();
 
-    await pref.setBool(sensitiveInfoKey, displaySensitiveInfo);
+    await pref.setBool(_sensitiveInfoKey, displaySensitiveInfo);
 
     final currentState = state as ParameterLoaded;
 
-    _notifyStateChange(
-      currentState.appParameter.copyWith(
-        isSensitiveInfoDisplayed: displaySensitiveInfo,
-      ),
-    );
+    emit(ParameterLoaded(currentState.parameter.copyWith(
+      isSensitiveInfoDisplayed: displaySensitiveInfo,
+    )));
   }
 
   void setAppreciation(String appreciation) async {
     final pref = await SharedPreferences.getInstance();
 
-    await pref.setString(appreciationKey, appreciation);
+    await pref.setString(_appreciationKey, appreciation);
 
     final currentState = state as ParameterLoaded;
 
-    _notifyStateChange(
-      currentState.appParameter.copyWith(appreciation: appreciation),
-    );
+    emit(ParameterLoaded(
+        currentState.parameter.copyWith(appreciation: appreciation)));
   }
 
-  void _notifyStateChange(AppParameter parameter) {
-    _parameterBehaviorSubject.add(parameter);
-    emit(ParameterLoaded(parameter));
-  }
+  void setAppreciationDisplay(bool appreciationDisplay) async {
+    final pref = await SharedPreferences.getInstance();
 
-  Stream<AppParameter> watch() => _parameterBehaviorSubject.stream;
+    await pref.setBool(_appreciationDisplayKey, appreciationDisplay);
 
-  @override
-  Future<void> close() async {
-    _parameterBehaviorSubject.close();
-    await super.close();
+    final currentState = state as ParameterLoaded;
+
+    emit(ParameterLoaded(currentState.parameter
+        .copyWith(isAppreciationDisplayed: appreciationDisplay)));
   }
 }

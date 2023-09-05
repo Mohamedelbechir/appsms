@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:appsms/cubit/messages/list_messages_cubit.dart';
+import 'package:appsms/cubit/parameter/parameter_cubit.dart';
 import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
 import 'package:appsms/pages/parameter/parameter_modal.dart';
 import 'package:appsms/pages/home/widgets/date_selector.dart';
@@ -29,6 +30,12 @@ class _HomePageState extends State<HomePage> {
   bool isSensitiveDetailDisplayed = false;
   final _receiverPhoneNumberController = TextEditingController(text: '');
   var selectedDate = DateUtils.dateOnly(DateTime.now());
+
+  @override
+  void initState() {
+    context.read<ParameterCubit>().loadAppParameter();
+    super.initState();
+  }
 
   Future<SaveImageResult> takeWidgetCapture(GlobalKey widgetKey) async {
     final byteData = await convertToImageByteData(widgetKey);
@@ -68,6 +75,7 @@ class _HomePageState extends State<HomePage> {
         title: const AppTitle(),
       ),
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           Expanded(
@@ -177,13 +185,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _renderListMessages(ListMessagesState state) {
+    if (_canDisplayEmptyMessages(state)) {
+      return const EmptyListOfMessage();
+    }
     if (state is MessagesLoaded) {
       return _listMessages(state);
     }
-    if (state is ListMessagesInitial) {
-      return const EmptyListOfMessage();
-    }
+
     return Container();
+  }
+
+  bool _canDisplayEmptyMessages(ListMessagesState state) {
+    if (state is ListMessagesInitial ||
+        (state is MessagesLoaded && state.messages.isEmpty)) {
+      return true;
+    }
+    return false;
   }
 
   Widget _listMessages(MessagesLoaded state) {
@@ -199,11 +216,12 @@ class _HomePageState extends State<HomePage> {
           final currentKey = GlobalKey();
           messageWidgetKeys.add(currentKey);
           var messageContent = currentMessage.getMessage(
-                  noSensitiveDetails: state.isSensitiveDetailDisplayed) ??
+                  displaySensitiveDetails: state.isSensitiveDetailDisplayed) ??
               '';
           return MessageItem(
             currentKey: currentKey,
             messageContent: messageContent,
+            appreciation: state.appreciation,
           );
         }),
       ),

@@ -10,10 +10,10 @@ sealed class ParameterState extends Equatable {
 final class ParameterInitial extends ParameterState {}
 
 final class ParameterLoaded extends ParameterState {
-  final AppParameter appParameter;
+  final AppParameter parameter;
 
-  const ParameterLoaded(this.appParameter);
+  const ParameterLoaded(this.parameter);
 
   @override
-  List<Object> get props => [appParameter];
+  List<Object> get props => [parameter];
 }
