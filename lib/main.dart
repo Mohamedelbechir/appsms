@@ -1,3 +1,4 @@
+import 'package:appsms/cubit/parameter/parameter_cubit.dart';
 import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
 import 'package:appsms/pages/home/home.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
       }), */
       home: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (context) => ParameterCubit()..loadAppParameter()),
           BlocProvider(create: (context) => ReceiversPhoneNumbersCubit()),
           BlocProvider(create: (context) => ListMessagesCubit()),
         ],
