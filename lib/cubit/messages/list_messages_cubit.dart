@@ -42,7 +42,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
     var list = _applyPatternFilter(messages, bodyPatterns)
         .map(mapToMySmsMessage)
         .toList();
-        
+
     emit(MessagesLoaded(
       list,
       appreciation: _parameter?.displayAppreciation() ?? "",
@@ -76,7 +76,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
     String expeditor,
     DateTime? dateFrom,
   ) {
-    var filter = SmsFilter.where(SmsColumn.BODY).like("%%");
+    var filter = SmsFilter.where(SmsColumn.ADDRESS).equals(expeditor);
 
     if (dateFrom != null) {
       var dateTo = dateFrom.add(const Duration(days: 1));
