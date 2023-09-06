@@ -75,7 +75,6 @@ class _HomePageState extends State<HomePage> {
         title: const AppTitle(),
       ),
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           Expanded(
