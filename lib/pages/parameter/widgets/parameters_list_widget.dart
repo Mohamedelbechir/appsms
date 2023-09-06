@@ -30,7 +30,6 @@ class ParametersListWidget extends StatelessWidget {
                   style: switchTextStyle,
                 ),
               ),
-              //const Divider(),
               SwitchListTile(
                 value: parameter.isAppreciationDisplayed,
                 onChanged: (value) {
