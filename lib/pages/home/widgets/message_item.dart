@@ -28,6 +28,7 @@ class MessageItem extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               messageContent,
@@ -36,14 +37,17 @@ class MessageItem extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              appreciation,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
+            if (appreciation.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10.0),
+                child: Text(
+                  appreciation,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),
