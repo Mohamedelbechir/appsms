@@ -26,9 +26,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      /* builder: ((context, child) {
-        return MultiRepositoryProvider(providers: [], child: child!);
-      }), */
       home: MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => ParameterCubit()..loadAppParameter()),
