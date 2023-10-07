@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final messageWidgetKeys = <GlobalKey>[];
+  final messageWidgetKeyPars = <int, GlobalKey>{};
   bool isSensitiveDetailDisplayed = false;
   final _receiverPhoneNumberController = TextEditingController(text: '');
   var selectedDate = DateUtils.dateOnly(DateTime.now());
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
     final phoneNumbers = _getPhoneNumbers();
     context.read<ListMessagesCubit>().loadMessages(
           expeditor: "OrangeMoney",
-          bodyPatterns: phoneNumbers,
+          receiverPhoneNumbers: phoneNumbers,
           date: selectedDate,
         );
   }
@@ -169,6 +169,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _listMessages(MessagesLoaded state) {
+    messageWidgetKeyPars.clear();
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -179,14 +181,22 @@ class _HomePageState extends State<HomePage> {
         children: List.generate(state.messages.length, (index) {
           final currentMessage = state.messages.elementAt(index);
           final currentKey = GlobalKey();
-          messageWidgetKeys.add(currentKey);
+          messageWidgetKeyPars.putIfAbsent(index, () => currentKey);
           var messageContent = currentMessage.getMessage(
-                  displaySensitiveDetails: state.isSensitiveDetailDisplayed) ??
-              '';
+              displaySensitiveDetails: state.isSensitiveDetailDisplayed);
           return MessageItem(
+            key: Key("list_messages_$index"),
+            index: index,
+            transactionDate: currentMessage.date,
             currentKey: currentKey,
             messageContent: messageContent,
             appreciation: state.appreciation,
+            isMultiSelectEnabled: state.isMultiSelectionEnabled,
+            onChange: (value) {
+              context
+                  .read<ListMessagesCubit>()
+                  .setMessageSelection(index, value);
+            },
           );
         }),
       ),
@@ -194,10 +204,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> shareMessages() async {
-    if (messageWidgetKeys.isEmpty) return;
+    if (messageWidgetKeyPars.isEmpty) return;
 
     final result = await Share.shareXFiles(
-      await getXFiles(messageWidgetKeys, context),
+      await getXFiles(_getMessageWidgtKey(), context),
       subject: 'OrangeMoney',
       text: 'OrangeMoney',
     );
@@ -205,5 +215,24 @@ class _HomePageState extends State<HomePage> {
     if (result.status == ShareResultStatus.success) {
       print('Thank you for sharing the picture!');
     }
+  }
+
+  List<GlobalKey<State<StatefulWidget>>> _getMessageWidgtKey() {
+    final listMessageState = context.read<ListMessagesCubit>().state;
+    if (listMessageState is MessagesLoaded) {
+      if (listMessageState.isMultiSelectionEnabled) {
+        return messageWidgetKeyPars.entries
+            .where((currentKeyPair) {
+              return listMessageState.selectedIndexies
+                  .contains(currentKeyPair.key);
+            })
+            .map((currentKeyPair) => currentKeyPair.value)
+            .toList();
+      }
+      return messageWidgetKeyPars.entries
+          .map((currentKeyPair) => currentKeyPair.value)
+          .toList();
+    }
+    return [];
   }
 }

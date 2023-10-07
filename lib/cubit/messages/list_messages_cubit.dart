@@ -30,7 +30,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
 
   void loadMessages({
     String expeditor = "Orange",
-    List<String> bodyPatterns = const [],
+    List<String> receiverPhoneNumbers = const [],
     DateTime? date,
   }) async {
     final messages = await telephony.getInboxSms(
@@ -39,7 +39,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
       sortOrder: _getSortOrder,
     );
 
-    var list = _applyPatternFilter(messages, bodyPatterns)
+    var list = _applyPatternFilter(messages, receiverPhoneNumbers)
         .map(mapToMySmsMessage)
         .toList();
 
@@ -48,6 +48,22 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
       appreciation: _parameter?.displayAppreciation() ?? "",
       displaySensitiveDetail: _parameter?.isSensitiveInfoDisplayed ?? false,
     ));
+  }
+
+  void setMessageSelection(int messageIndex, bool selected) {
+    final currentState = state as MessagesLoaded;
+    final currentSelectedIndexies = currentState.selectedIndexies;
+    List<int> selectedIndexies;
+    if (selected) {
+      selectedIndexies = List.from(currentSelectedIndexies)..add(messageIndex);
+    } else {
+      selectedIndexies = currentSelectedIndexies
+          .where((currentIndex) => currentIndex != messageIndex)
+          .toList();
+    }
+    emit(
+      currentState.copyWith(selectedIndexies: selectedIndexies),
+    );
   }
 
   List<OrderBy> get _getSortOrder {
@@ -64,11 +80,13 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
 
   Iterable<SmsMessage> _applyPatternFilter(
     List<SmsMessage> messages,
-    List<String> patterns,
+    List<String> receiverPhoneNumbers,
   ) {
-    if (patterns.isEmpty) return messages;
+    if (receiverPhoneNumbers.isEmpty) return messages;
     return messages.where((currentMessage) {
-      return patterns.any((pattern) => currentMessage.body!.contains(pattern));
+      return receiverPhoneNumbers.any((receiverPhoneNumber) {
+        return currentMessage.body!.contains(receiverPhoneNumber);
+      });
     });
   }
 

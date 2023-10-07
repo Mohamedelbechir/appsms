@@ -12,25 +12,30 @@ class MessagesLoaded extends ListMessagesState {
   final List<MySmsMessage> messages;
   late final bool isSensitiveDetailDisplayed;
   late final String appreciation;
+  final List<int> selectedIndexies;
 
   MessagesLoaded(
     this.messages, {
     bool displaySensitiveDetail = false,
     this.appreciation = "",
+    this.selectedIndexies = const [],
   }) {
     isSensitiveDetailDisplayed = displaySensitiveDetail;
   }
+  bool get isMultiSelectionEnabled => selectedIndexies.isNotEmpty;
 
   MessagesLoaded copyWith({
     List<MySmsMessage>? messages,
     bool? displaySensitiveDetail,
     String? appreciation,
+    List<int>? selectedIndexies,
   }) {
     return MessagesLoaded(
       messages ?? this.messages,
       displaySensitiveDetail:
           displaySensitiveDetail ?? isSensitiveDetailDisplayed,
       appreciation: appreciation ?? this.appreciation,
+      selectedIndexies: selectedIndexies ?? this.selectedIndexies,
     );
   }
 
@@ -39,5 +44,6 @@ class MessagesLoaded extends ListMessagesState {
         messages,
         isSensitiveDetailDisplayed,
         appreciation,
+        selectedIndexies,
       ];
 }

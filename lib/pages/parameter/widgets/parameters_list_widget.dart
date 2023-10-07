@@ -18,7 +18,6 @@ class ParametersListWidget extends StatelessWidget {
              mainAxisSize: MainAxisSize.min,
             children: [
               SwitchListTile(
-                key: const Key("sensitive_detail"),
                 value: parameter.isSensitiveInfoDisplayed,
                 onChanged: (value) {
                   context

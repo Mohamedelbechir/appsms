@@ -21,8 +21,8 @@ class MySmsMessage extends Equatable {
     bodyWithNoSensitiveInfo = "${body?.split('.').first}.";
   }
 
-  String? getMessage({bool displaySensitiveDetails = true}) {
-    return displaySensitiveDetails ? body : bodyWithNoSensitiveInfo;
+  String getMessage({bool displaySensitiveDetails = true}) {
+    return (displaySensitiveDetails ? body : bodyWithNoSensitiveInfo) ?? "";
   }
 
   MySmsMessage.withDateTime({

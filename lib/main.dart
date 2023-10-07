@@ -1,3 +1,4 @@
+import 'package:appsms/cubit/multiSelect/multi_select_cubit.dart';
 import 'package:appsms/cubit/parameter/parameter_cubit.dart';
 import 'package:appsms/cubit/receiversPhoneNumber/receivers_phone_numbers_cubit.dart';
 import 'package:appsms/pages/home/home.dart';
@@ -28,9 +29,11 @@ class MyApp extends StatelessWidget {
       ),
       home: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => ParameterCubit()..loadAppParameter()),
+          BlocProvider(
+              create: (context) => ParameterCubit()..loadAppParameter()),
           BlocProvider(create: (context) => ReceiversPhoneNumbersCubit()),
           BlocProvider(create: (context) => ListMessagesCubit(context.read())),
+          BlocProvider(create: (context) => MultiSelectCubit()),
         ],
         child: const SafeArea(child: HomePage()),
       ),
