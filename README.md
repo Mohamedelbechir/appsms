@@ -10,3 +10,4 @@ The following command generates artifacts
 flutter build apk --split-per-abi --no-shrink
 
 ```
+When the command is successfully ran artificats will be created under *appsms\build\app\outputs\flutter-apk* 
