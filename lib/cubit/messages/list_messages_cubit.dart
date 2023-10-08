@@ -47,6 +47,7 @@ class ListMessagesCubit extends Cubit<ListMessagesState> {
       list,
       appreciation: _parameter?.displayAppreciation() ?? "",
       displaySensitiveDetail: _parameter?.isSensitiveInfoDisplayed ?? false,
+      selectedIndexies: const [],
     ));
   }
 

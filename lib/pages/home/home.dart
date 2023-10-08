@@ -12,6 +12,7 @@ import '../../widgets/app_title.dart';
 import 'widgets/empty_list_of_message.dart';
 import 'widgets/message_item.dart';
 import 'widgets/receiver_phone_numbers_widget.dart';
+import 'widgets/share_button.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -67,18 +68,7 @@ class _HomePageState extends State<HomePage> {
                         onSelect: (value) => selectedDate = value,
                       ),
                     ),
-                    InkWell(
-                      onTap: () async {
-                        await shareMessages();
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.share,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ),
+                    ShareButton(onTap: shareMessages),
                     InkWell(
                       onTap: () {
                         parameterModal(context);
@@ -110,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                           padding: EdgeInsets.all(15.0),
                           child: Icon(Icons.search, color: Colors.orange),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -185,7 +175,8 @@ class _HomePageState extends State<HomePage> {
           var messageContent = currentMessage.getMessage(
               displaySensitiveDetails: state.isSensitiveDetailDisplayed);
           return MessageItem(
-            key: Key("list_messages_$index"),
+            key: Key(
+                "list_messages_${currentMessage.date!.millisecondsSinceEpoch}"),
             index: index,
             transactionDate: currentMessage.date,
             currentKey: currentKey,
