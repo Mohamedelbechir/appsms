@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 
 class MessageItem extends StatefulWidget {
   const MessageItem({
@@ -30,11 +31,13 @@ class MessageItem extends StatefulWidget {
 class _MessageItemState extends State<MessageItem> {
   final locale = 'fr';
   bool _isSelected = false;
+  bool _canVibrate = true;
 
   @override
   void initState() {
     timeago.setLocaleMessages('fr', timeago.FrMessages());
     timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
+    _initVibration();
     super.initState();
   }
 
@@ -46,6 +49,10 @@ class _MessageItemState extends State<MessageItem> {
     return "${formatter.format(widget.transactionDate!)}  |  ${timeago.format(widget.transactionDate!, locale: locale)}";
   }
 
+  Future<void> _initVibration() async {
+    _canVibrate = await Vibrate.canVibrate;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -54,9 +61,10 @@ class _MessageItemState extends State<MessageItem> {
           _setState();
         }
       },
-      onLongPress: () {
-        if (!widget.isMultiSelectEnabled) HapticFeedback.lightImpact();
-
+      onLongPress: () async {
+        if (canVibrate) {
+          Vibrate.feedback(FeedbackType.success);
+        }
         _setState();
       },
       child: Column(
@@ -124,6 +132,8 @@ class _MessageItemState extends State<MessageItem> {
       ),
     );
   }
+
+  bool get canVibrate => !widget.isMultiSelectEnabled && _canVibrate;
 
   void _setState() {
     setState(() {
