@@ -10,7 +10,7 @@ class ParameterCubit extends Cubit<ParameterState> {
   final _appreciationDisplayKey = "APPRECIATION_DISPLAY_KEY";
   final _appreciationKey = "APPRECIATION_KEY";
   final _appreciationDefaultValue =
-      "ETS SABIL vous remercie pour votre confiance";
+      "ETS SABIL vous remercie pour votre confiance.";
 
   final _sensitiveDisplayDefaultValue = false;
   final _appreciationDisplayDefaultValue = true;
