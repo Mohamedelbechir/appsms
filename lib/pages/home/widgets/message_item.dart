@@ -39,7 +39,7 @@ class _MessageItemState extends State<MessageItem> {
   }
 
   String transactionDateDislay() {
-    final formatter = DateFormat('dd-MM-yyyy hh:mm:ss');
+    final formatter = DateFormat('dd-MM-yyyy HH:mm:ss');
     if (widget.transactionDate == null) {
       return 'Date de transaction inconnue';
     }
@@ -116,10 +116,7 @@ class _MessageItemState extends State<MessageItem> {
                 const Positioned(
                   top: -2.2,
                   left: 5,
-                  child: Icon(
-                    Icons.check_circle,
-                    color: Colors.orange,
-                  ),
+                  child: Icon(Icons.check_circle, color: Colors.orange),
                 ),
             ],
           ),
