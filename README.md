@@ -4,7 +4,7 @@ The project aim to provide to ETS Sabil an app that share OrangeMoney operation 
 
 ## How to build
 
-The following command generate artifacts
+The following command generates artifacts
 
 ```
 flutter build apk --split-per-abi
